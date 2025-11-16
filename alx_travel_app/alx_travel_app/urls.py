@@ -24,5 +24,5 @@ urlpatterns = [
     path('docs/', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
     path('redoc/', schema_view.with_ui('redoc', cache_timeout=0), name='schema-redoc'),
     path('admin/', admin.site.urls),
-    path("api/v1/",  include('listings.urls'))
+    path("api/v1/",  include('alx_travel_app.listings.urls'))
 ]

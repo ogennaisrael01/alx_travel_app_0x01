@@ -1,14 +1,31 @@
 from django.shortcuts import render
 from rest_framework.decorators import api_view
 from rest_framework import status
-from django.http import HttpRequest, HttpResponse
 from rest_framework.exceptions import NotFound
 from .models import Bookings
-from .serializers import BookingsOut, BookingSerializer
+from .serializers import BookingsOut, BookingSerializer, RegisterSerializer, LoginSerializer
 from rest_framework.response import Response
+from django.contrib.auth import authenticate, login, logout
+from rest_framework.request import Request
+
+
+@api_view(["POST"])
+def register(request):
+    if request.method == "POST":
+        serializer = RegisterSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(status=status.HTTP_201_CREATED, data={
+            "success":True,
+            "message": "Registration successful",
+            "user_id": serializer.data
+        })
+
+    return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
+
 
 @api_view(["POST", 'GET'])
-def booking_view(request: HttpRequest) -> Response:
+def booking_view(request: Request) -> Response:
     if request.method == 'GET':
         try:
             bookings = Bookings.objects.all()
