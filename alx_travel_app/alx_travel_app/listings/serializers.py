@@ -97,7 +97,13 @@ class BookingsOutSerializer(serializers.ModelSerializer):
 class ProductCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Products
-        fields = ["name", "location", "price_per_night", "description", "price"]
+        fields = [
+            "name", 
+            "location", 
+            "price_per_night", 
+            "description", 
+            "price"
+            ]
 
     def validate_name(self, value):
         if not value:
@@ -110,4 +116,15 @@ class ProductOutSerializer(serializers.ModelSerializer):
     user = serializers.ReadOnlyField(source="user.email")
     class Meta:
         model = Products
-        fields = ["product_id", "user", "name", "location", "description", "price", "price_per_night", 'created_at', "bookings"]
+        fields = [
+            "product_id", 
+            "user", 
+            "name", 
+            "location", 
+            "description", 
+            "price", 
+            "price_per_night", 
+            'created_at', 
+            "bookings"
+            ]
+        
