@@ -3,9 +3,9 @@ from rest_framework.decorators import api_view
 from rest_framework import status
 from rest_framework.exceptions import NotFound
 from .models import Bookings
-from .serializers import BookingsOut, BookingSerializer, RegisterSerializer, LoginSerializer
+from .serializers import BookingsOutSerializer, BookingSerializer, RegisterSerializer, LoginSerializer
 from rest_framework.response import Response
-from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth import authenticate
 from rest_framework.request import Request
 
 

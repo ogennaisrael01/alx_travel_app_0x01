@@ -2,8 +2,6 @@
 from pathlib import Path
 from dotenv import load_dotenv
 import os
-import pymysql
-pymysql.install_as_MySQLdb()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -15,6 +13,8 @@ SECRET_KEY = os.getenv("SECRET_KEY")
 DEBUG = os.getenv("DEBUG")
 
 ALLOWED_HOSTS = ["*"]
+
+AUTH_USER_MODEL = 'listings.CustomUser'
 
 
 # REST FRAMEWORK
@@ -76,10 +76,10 @@ WSGI_APPLICATION = 'alx_travel_app.wsgi.application'
 if DEBUG:
     DATABASES = {
         'default': {
-            'ENGINE': 'django.db.backends.mysql',
-            'NAME': os.getenv("DB_NAME"),
-            "USER": os.getenv("USER"),
-            "PASSWORD": os.getenv("PASSWORD"),
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': "travelapp_db",
+            "USER": "postgres",
+            "PASSWORD": '193782',
         }
     }
 else:

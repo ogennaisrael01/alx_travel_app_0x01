@@ -1,6 +1,6 @@
 from django.db import models
-from django.contrib.auth.models import User
 from django.contrib.auth.models import BaseUserManager,  AbstractBaseUser
+import uuid
 
 
 class CustomUserManager(BaseUserManager):
@@ -32,7 +32,7 @@ class CustomUser(AbstractBaseUser):
         ADMIN = 'ADMIN', 'Admin'
         GUEST = 'GUEST', 'Guest'
     
-    user_id = models.UUIDField(max_length=20, unique=True, primary_key=True)
+    user_id = models.UUIDField(max_length=20, unique=True, primary_key=True, default=uuid.uuid4())
     email = models.EmailField(max_length=50, unique=True)
     first_name = models.CharField(max_length=200)
     last_name = models.CharField(max_length=200)
@@ -68,32 +68,52 @@ class CustomUser(AbstractBaseUser):
     def get_full_name(self):
         return f"{self.first_name} {self.last_name}"
 
-    
+class Products(models.Model):
+    product_id = models.UUIDField(max_length=20, primary_key=True, null=False, unique=True, db_index=True, default=uuid.uuid4())
+    name = models.CharField(max_length=100, null=False,  db_index=True)
+    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name="products")
+    location = models.CharField(max_length=100)
+    price_per_night = models.DecimalField(max_digits=10, decimal_places=2)
+    description = models.TextField()
+    price = models.DecimalField(max_digits=10, decimal_places=2, db_index=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
-class BookingType(models.TextChoices):
-    HOTEL = "HOTEL", "Hotel"
-    FLIGHT = "FLIGHT", "Flight"
-    PACKAGE = "PACKAGE", "Package"
+    def __str__(self):
+        return f"{self.user.email} === {self.name} === {self.price}"
 
+    class Meta:
+        ordering = ["-created_at"]
+        db_table = 'products'
+        verbose_name_plural = 'products'
 
-class Status(models.TextChoices):
-    PENDING = "Pending"
-    CONFIRMED = "Confirmed"
-    CANCELLED = "Cancelled"
- 
 class Bookings(models.Model):
-    id = models.UUIDField(primary_key=True, null=False, max_length=40)
-    user_id = models.ForeignKey(User, on_delete=models.CASCADE, related_name="bookings", default="rueooow-22-2929")
+    class BookingType(models.TextChoices):
+        HOTEL = "HOTEL", "Hotel"
+        FLIGHT = "FLIGHT", "Flight"
+        PACKAGE = "PACKAGE", "Package"
+
+
+    class Status(models.TextChoices):
+        PENDING = "Pending"
+        CONFIRMED = "Confirmed"
+        CANCELLED = "Cancelled"
+ 
+    booking_id = models.UUIDField(primary_key=True, null=False, max_length=20, unique=True, db_index=True, default=uuid.uuid4())
+    product = models.ForeignKey(Products, on_delete=models.CASCADE, related_name="bookings")
+    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name="bookings")
     bookings_type = models.CharField(max_length=10, choices=BookingType.choices, editable=False, default=BookingType.HOTEL)
-    booking_date = models.DateField()
+    start_date = models.DateField()
+    end_date = models.DateField()
     status = models.CharField(max_length=200,choices=Status.choices, default=Status.PENDING)
-    total_price = models.DecimalField(max_digits=10, decimal_places=2)
     is_booked = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now_add=True)
 
 
     def __str__(self):
-        return f"Booking by {self.user_id.username} --- {self.booking_type} ------ On {self.created_at}"
+        return f"Booking by {self.user.email} ==== {self.bookings_type}"
 
-
+    class Meta:
+        verbose_name = 'booking'
+        db_table = "bookings"
