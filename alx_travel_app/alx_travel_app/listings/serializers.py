@@ -73,12 +73,24 @@ class BookingsOutSerializer(serializers.ModelSerializer):
     user = serializers.ReadOnlyField(source="user.email")
     class Meta:
         model = Bookings
-        fields = ["id", "user", "status", "booking_type", "start_date","end_date", "total_price", "is_booked", "created_at"]
+        fields = [
+            "booking_id", 
+            "user", 
+            "status", ""
+            "bookings_type", 
+            "start_date",
+            "end_date", 
+            "total_price", 
+            "is_booked", 
+            "created_at"
+            ]
 
     def get_total_price(self, obj):
         """ get total price for each booking by multiplying the booking days to the price of the product"""
-        total_days = obj.start_date - obj.end_date
-        total_price = total_days * obj.products.price_per_night
+        duration_of_days = obj.start_date - obj.end_date
+        number_of_days = duration_of_days.days
+        price_per_night = float(obj.product.price_per_night)
+        total_price = number_of_days * price_per_night 
         return total_price
     
 

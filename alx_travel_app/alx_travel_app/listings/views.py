@@ -1,12 +1,17 @@
 from django.shortcuts import render
 from rest_framework.decorators import api_view
-from rest_framework import status
+from rest_framework import status, viewsets
 from rest_framework.exceptions import NotFound
 from .models import Bookings
 from .serializers import BookingsOutSerializer, BookingSerializer, RegisterSerializer, LoginSerializer
 from rest_framework.response import Response
 from django.contrib.auth import authenticate
 from rest_framework.request import Request
+
+
+# class BookingViewSets(viewsets.ModelViewSet):
+#     serializer_class = BookingsOutSerializer
+#     queryset = Bookings.objects.all()
 
 
 @api_view(["POST"])
@@ -31,13 +36,13 @@ def booking_view(request: Request) -> Response:
             bookings = Bookings.objects.all()
         except Bookings.DoesNotExist:
             raise NotFound(detail={"success": False, "message": "bookings not found"})
-        serializer = BookingsOut(bookings, many=True)
+        serializer = BookingsOutSerializer(bookings, many=True)
         return Response({"success": True, "bookings": serializer.data}, status=status.HTTP_200_OK)
     elif request.method == "POST":
         serializer = BookingSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         serializer.save(user_id=request.user)
-        response = BookingsOut(serializer)
+        response = BookingsOutSerializer(serializer)
         return Response(response.data)
 
     else:

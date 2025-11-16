@@ -95,9 +95,9 @@ class Bookings(models.Model):
 
 
     class Status(models.TextChoices):
-        PENDING = "Pending"
-        CONFIRMED = "Confirmed"
-        CANCELLED = "Cancelled"
+        PENDING ="PENDING", "Pending"
+        CONFIRMED = "CONFIRMED", "Confirmed"
+        CANCELLED = "CANCELLED", "Cancelled"
  
     booking_id = models.UUIDField(primary_key=True, null=False, max_length=20, unique=True, db_index=True, default=uuid.uuid4())
     product = models.ForeignKey(Products, on_delete=models.CASCADE, related_name="bookings")
