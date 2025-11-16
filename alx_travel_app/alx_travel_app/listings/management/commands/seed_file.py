@@ -10,7 +10,7 @@ import re
 
 
 class Command(BaseCommand):
-    help = "Populate database with data"
+    help = "Populate database with  sample data"
 
     def generate_random_pass(self):
         chars = string.ascii_lowercase + "1234567890"
