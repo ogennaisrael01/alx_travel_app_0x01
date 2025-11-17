@@ -1,6 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import BaseUserManager,  AbstractBaseUser
 import uuid
+from django.core.validators import MaxValueValidator, MinValueValidator
 
 
 class CustomUserManager(BaseUserManager):
@@ -117,3 +118,34 @@ class Bookings(models.Model):
     class Meta:
         verbose_name = 'booking'
         db_table = "bookings"
+
+
+class Reviews(models.Model):
+    review_id = models.UUIDField(
+        primary_key=True,
+        db_index=True,
+        null=False,
+        unique=True,
+        max_length=20,
+        default=uuid.uuid4()
+    )
+    product = models.ForeignKey(Products, on_delete=models.CASCADE, related_name="reviews")
+    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name="reviews")
+    ratings = models.PositiveIntegerField(
+        validators=[
+            MinValueValidator(1, "Ratings can't be less than 1"),
+            MaxValueValidator(5, "Ratings can't be greater than 5")
+            ]
+
+            )
+    message = models.TextField(max_length=1000)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"{self.user.email} === {self.product.name} === {self.ratings}"
+    
+    class Meta:
+        ordering = ["-created_at"]
+        db_table = "reviews"
+        verbose_name = "Reviews"

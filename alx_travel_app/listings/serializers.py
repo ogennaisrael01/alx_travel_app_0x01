@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Bookings, Products
+from .models import Bookings, Products, Reviews
 from django.contrib.auth.password_validation import validate_password
 import email_validator
 from django.contrib.auth import get_user_model
@@ -92,7 +92,14 @@ class BookingsOutSerializer(serializers.ModelSerializer):
         price_per_night = float(obj.product.price_per_night)
         total_price = number_of_days * price_per_night 
         return total_price
-    
+
+class ReviewSerializer(serializers.ModelSerializer):
+    user = serializers.ReadOnlyField(source="user.email")
+    product = serializers.ReadOnlyField(source="product.name")
+    class Meta:
+        model = Reviews   
+        fields = ["review_id", "user", "product", "rating", "message", "created_at"]
+        read_only_fields = ["review_id", "user", "product", "created_at"] 
 
 class ProductCreateSerializer(serializers.ModelSerializer):
     class Meta:
@@ -112,8 +119,10 @@ class ProductCreateSerializer(serializers.ModelSerializer):
         return value
     
 class ProductOutSerializer(serializers.ModelSerializer):
-    bookings = BookingsOutSerializer()
+    bookings = BookingsOutSerializer(read_only=True)
     user = serializers.ReadOnlyField(source="user.email")
+    avg_ratings = serializers.SerializerMethodField()
+    reviews = ReviewSerializer(read_only=True)
     class Meta:
         model = Products
         fields = [
@@ -125,6 +134,19 @@ class ProductOutSerializer(serializers.ModelSerializer):
             "price", 
             "price_per_night", 
             'created_at', 
-            "bookings"
+            "bookings",
+            "reviews",
+            "avg_ratings"
             ]
+    
+    def get_avg_ratings(self, obj):
+        reviews = obj.reviews.all()
+        total_sum = 0
+        total_ratings = len(reviews)
+        for review in total_ratings:
+            total_sum += review.ratings
+        avg_ratings = total_sum / total_ratings
+        return avg_ratings
+
+
         

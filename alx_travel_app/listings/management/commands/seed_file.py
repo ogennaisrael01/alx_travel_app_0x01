@@ -1,5 +1,5 @@
 from django.core.management.base import BaseCommand
-from ...models import CustomUser, Products, Bookings
+from ...models import CustomUser, Products, Bookings, Reviews
 from faker import Faker
 from django.db.models import Q
 import random
@@ -22,6 +22,7 @@ class Command(BaseCommand):
         CustomUser.objects.all().delete()
         Products.objects.all().delete()
         Bookings.objects.all().delete()
+        Reviews.objects.all().delete()
 
         role_choices = ["HOST", 'ADMIN', 'GUEST']
         USER_SIZE = 100
@@ -111,6 +112,28 @@ class Command(BaseCommand):
             Bookings.bulk_create(BOOKING_DATA)
             BOOKING_DATA.clear()
 
+
+        REVIEW_SIZE = 2_000
+        REVIEW_DATA = []
+        for i in range(REVIEW_SIZE):
+            self.stdout.write(f"Seeding {i+1} REVIEW data....")
+            review = Reviews(
+                review_id=uuid.uuid4(),
+                product=random.choice(products),
+                user=random.choice(users),
+                ratings=random.randint(1, 5),
+                message=faker.text()
+            )
+            REVIEW_DATA.append(review)
+
+            if len(REVIEW_DATA) == CREATE_BATCH:
+                self.stdout.write(f"SEDING {len(BOOKING_DATA)} REVIEW DATA ....")
+                Reviews.objects.bulk_create(REVIEW_DATA)
+                REVIEW_DATA.clear()
+        if len(REVIEW_DATA) > 0:
+            self.stdout.write(F"SEEDING {len(BOOKING_DATA)} REVIEW DATA....")
+            Reviews.bulk_create(BOOKING_DATA)
+            REVIEW_DATA.clear()
         self.stdout.write('SUCCESSFULLY POPULATED THE DB WITH SAMPLE DATA.')
 
 
