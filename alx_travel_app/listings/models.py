@@ -33,7 +33,7 @@ class CustomUser(AbstractBaseUser):
         ADMIN = 'ADMIN', 'Admin'
         GUEST = 'GUEST', 'Guest'
     
-    user_id = models.UUIDField(max_length=20, unique=True, primary_key=True, default=uuid.uuid4())
+    user_id = models.UUIDField(max_length=20, unique=True, primary_key=True, default=uuid.uuid4)
     email = models.EmailField(max_length=50, unique=True)
     first_name = models.CharField(max_length=200)
     last_name = models.CharField(max_length=200)
@@ -70,7 +70,7 @@ class CustomUser(AbstractBaseUser):
         return f"{self.first_name} {self.last_name}"
 
 class Products(models.Model):
-    product_id = models.UUIDField(max_length=20, primary_key=True, null=False, unique=True, db_index=True, default=uuid.uuid4())
+    product_id = models.UUIDField(max_length=20, primary_key=True, null=False, unique=True, db_index=True, default=uuid.uuid4)
     name = models.CharField(max_length=100, null=False,  db_index=True)
     user = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name="products")
     location = models.CharField(max_length=100)
@@ -100,7 +100,7 @@ class Bookings(models.Model):
         CONFIRMED = "CONFIRMED", "Confirmed"
         CANCELLED = "CANCELLED", "Cancelled"
  
-    booking_id = models.UUIDField(primary_key=True, null=False, max_length=20, unique=True, db_index=True, default=uuid.uuid4())
+    booking_id = models.UUIDField(primary_key=True, null=False, max_length=20, unique=True, db_index=True, default=uuid.uuid4)
     product = models.ForeignKey(Products, on_delete=models.CASCADE, related_name="bookings")
     user = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name="bookings")
     bookings_type = models.CharField(max_length=10, choices=BookingType.choices, editable=False, default=BookingType.HOTEL)

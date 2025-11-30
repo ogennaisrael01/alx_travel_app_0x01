@@ -98,13 +98,21 @@ class ReviewSerializer(serializers.ModelSerializer):
     product = serializers.ReadOnlyField(source="product.name")
     class Meta:
         model = Reviews   
-        fields = ["review_id", "user", "product", "rating", "message", "created_at"]
+        fields = [
+            "review_id", 
+            "user", 
+            "product", 
+            "ratings", 
+            "message", 
+            "created_at"
+            ]
         read_only_fields = ["review_id", "user", "product", "created_at"] 
 
 class ProductCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Products
         fields = [
+            "product_id",
             "name", 
             "location", 
             "price_per_night", 
@@ -119,10 +127,10 @@ class ProductCreateSerializer(serializers.ModelSerializer):
         return value
     
 class ProductOutSerializer(serializers.ModelSerializer):
-    bookings = BookingsOutSerializer(read_only=True)
+    bookings = BookingsOutSerializer(read_only=True, many=True)
     user = serializers.ReadOnlyField(source="user.email")
     avg_ratings = serializers.SerializerMethodField()
-    reviews = ReviewSerializer(read_only=True)
+    reviews = ReviewSerializer(read_only=True, many=True)
     class Meta:
         model = Products
         fields = [
@@ -141,11 +149,13 @@ class ProductOutSerializer(serializers.ModelSerializer):
     
     def get_avg_ratings(self, obj):
         reviews = obj.reviews.all()
+        avg_ratings = 0
         total_sum = 0
-        total_ratings = len(reviews)
-        for review in total_ratings:
+        if not reviews:
+            return avg_ratings
+        for review in reviews:
             total_sum += review.ratings
-        avg_ratings = total_sum / total_ratings
+        avg_ratings = total_sum / len(reviews)
         return avg_ratings
 
 

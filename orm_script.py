@@ -6,17 +6,18 @@ import django
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'alx_travel_app.settings')
 django.setup()
 
-from alx_travel_app.listings.models import Products, Reviews
+from alx_travel_app.listings.models import Products, Reviews, Bookings
 from django.db import connection
+from django.contrib.auth import get_user_model
+
+User = get_user_model()
 
 def run():
-    product = Products.objects.get(name="Taylor-Elliott")
+    product = Products.objects.filter(name="Horton-Vasquez").first()
     reviews = product.reviews.all()
-    total = 0
-    total_len = len(reviews)
-    for review in reviews:
-        total += review.ratings
-    print(f"avg = {total / total_len}" )
+    if not reviews:
+        return None
+    print(reviews)
 
     print(connection.queries)
 
