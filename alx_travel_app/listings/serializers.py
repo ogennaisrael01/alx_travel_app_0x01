@@ -76,7 +76,7 @@ class BookingsOutSerializer(serializers.ModelSerializer):
         fields = [
             "booking_id", 
             "user", 
-            "status", ""
+            "status",
             "bookings_type", 
             "start_date",
             "end_date", 
@@ -159,4 +159,17 @@ class ProductOutSerializer(serializers.ModelSerializer):
         return avg_ratings
 
 
+class PaymentSerializer(serializers.Serializer):
+    pmt_choices = ["FULL_PAYMENT", "PAY_PERNIGHT"]
+    pmt_size = serializers.ChoiceField(choices=pmt_choices, write_only=True, required=True)
+  
+    def validate(self, attrs):
+        request = self.context.get("request")
+        booking = self.context.get("booking")
+        if getattr(booking, "user", None) != getattr(request, "user", None):
+            raise serializers.ValidationError("You dont have access to perform this action")
+        # if getattr(booking, "status") != Bookings.Status.CONFIRMED:
+        #     raise serializers.ValidationError("You can only pay for confirmed bookings")
+        return attrs
+    
         

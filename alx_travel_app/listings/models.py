@@ -2,6 +2,8 @@ from django.db import models
 from django.contrib.auth.models import BaseUserManager,  AbstractBaseUser
 import uuid
 from django.core.validators import MaxValueValidator, MinValueValidator
+import secrets
+
 
 
 class CustomUserManager(BaseUserManager):
@@ -17,13 +19,8 @@ class CustomUserManager(BaseUserManager):
         user.save(using=self._db)
         return user
     def create_superuser(self, email, password, **extra_fields):
-        extra_fields.setdefault("is_superuser", True)
-        extra_fields.setdefault("is_staff", True)
-
-        if extra_fields["is_superuser"] != True:
-            raise ValueError("An admin user must have is super user set to True")
-        if extra_fields["is_staff"] != True:
-            raise ValueError("an admin user must have is_staff field set to true")
+        extra_fields["is_superuser"] = True
+        extra_fields["is_staff"] = True
         user = self.create_user(email=email, password=password, **extra_fields)
         return user
     
@@ -149,3 +146,48 @@ class Reviews(models.Model):
         ordering = ["-created_at"]
         db_table = "reviews"
         verbose_name = "Reviews"
+
+
+
+class Payments(models.Model):
+    class PaymentStatus(models.TextChoices):
+        PENDING = "PENDING", "Pending"
+        FAILED = "FAILED", "Failed"
+        COMPLETED = "COMPLETED", "Completed"
+
+    payment_id = models.UUIDField(
+        max_length=20,
+        primary_key=True,
+        unique=True,
+        db_index=True,
+        default=uuid.uuid4
+    )
+
+    pmt_method = models.CharField(max_length=200)
+    pmt_status = models.CharField(max_length=200, choices=PaymentStatus.choices, default=PaymentStatus.PENDING)
+    amount = models.DecimalField(max_digits=10, decimal_places=2)
+
+    pmt_ref = models.CharField(max_length=200, unique=True)
+    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name="payments", null=True, blank=True)
+    email = models.EmailField()
+
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def is_verified(self):
+        if hasattr(self, "pmt_status") and self.pmt_status == self.PaymentStatus.COMPLETED:
+            return True
+        return False
+    
+    def save(self, *args, **kwargs):
+        while not self.pmt_ref:
+            ref = secrets.token_urlsafe(30)
+            if not Payments.objects.filter(pmt_ref=ref).exists():
+                self.pmt_ref = ref
+        super().save(args, kwargs)
+
+    class Meta:
+        ordering = ["-created_at"]
+
+    def __str__(self):
+        return f"Payment({self.pmt_ref}, {self.amount})"
+    
