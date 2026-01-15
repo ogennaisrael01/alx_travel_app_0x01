@@ -4,7 +4,7 @@ def test_regiser():
     url = "https://api.chapa.co/v1/transaction/verify/chewatatest-6669"
     payload = ''
     headers = {
-      'Authorization': 'Bearer CHASECK_TEST-n7TrtZf87rpef5AtLKIaWPALjHUJq9uP'
+      'Authorization': 'Bearer '
   }
     response = requests.get(url, headers=headers, data=payload)
     data = response.text
