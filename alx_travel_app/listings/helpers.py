@@ -1,6 +1,6 @@
 from django.shortcuts import get_object_or_404
 from  rest_framework.exceptions import ValidationError
-from .models import Bookings
+from .models import Bookings, Payments
 from uuid import UUID
 from django.db import transaction
 import logging
@@ -22,4 +22,17 @@ def get_booking_by_id(booking_id: UUID) -> dict:
         "status": "success",
         "booking": booking
     }
+
+def get_payment_by_tx_ref(tx_ref: str, user) -> dict:
+    try:
+        with transaction.atomic():      
+            payment = get_object_or_404(Payments, pmt_ref=tx_ref, user=user)
+    except Exception:
+        logger.exception(f"Failed to get payment object with tx_ref {tx_ref}", exc_info=True)
+        raise
+    return {
+        "status": "success",
+        "payment": payment
+    }
+
 

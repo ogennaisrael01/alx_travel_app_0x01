@@ -166,8 +166,9 @@ class Payments(models.Model):
     pmt_method = models.CharField(max_length=200)
     pmt_status = models.CharField(max_length=200, choices=PaymentStatus.choices, default=PaymentStatus.PENDING)
     amount = models.DecimalField(max_digits=10, decimal_places=2)
-
+    reason = models.TextField()
     pmt_ref = models.CharField(max_length=200, unique=True)
+    booking = models.ForeignKey(Bookings, on_delete=models.CASCADE, related_name="payments")
     user = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name="payments", null=True, blank=True)
     email = models.EmailField()
 
@@ -177,14 +178,6 @@ class Payments(models.Model):
         if hasattr(self, "pmt_status") and self.pmt_status == self.PaymentStatus.COMPLETED:
             return True
         return False
-    
-    def save(self, *args, **kwargs):
-        while not self.pmt_ref:
-            ref = secrets.token_urlsafe(30)
-            if not Payments.objects.filter(pmt_ref=ref).exists():
-                self.pmt_ref = ref
-        super().save(args, kwargs)
-
     class Meta:
         ordering = ["-created_at"]
 

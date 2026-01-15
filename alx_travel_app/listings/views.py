@@ -21,8 +21,8 @@ from rest_framework.exceptions import PermissionDenied
 from .models import Products, Payments
 from rest_framework.pagination import CursorPagination
 import secrets
-from .helpers import get_booking_by_id
-from .payments import payment_init
+from .helpers import get_booking_by_id, get_payment_by_tx_ref
+from .payments import payment_init, payment_verify
 
 class CustomPagination(CursorPagination):
     page_size = 20
@@ -102,11 +102,11 @@ class PaymentView(APIView):
 
         if booking_dict.get("status") == "success":
             booking = booking_dict.get("booking")
-
-        print(booking.user, request.user)
         serializer = self.serializer_class(data=request.data, context={"request": request, "booking": booking})
         serializer.is_valid(raise_exception=True)
-        pmt_ref = secrets.token_urlsafe(30)
+        pmt_ref = f"ref_{secrets.token_urlsafe(30)}"
+        if Payments.objects.filter(pmt_ref=pmt_ref).exists():
+            pmt_ref = f"ref_{secrets.token_urlsafe(30)}"
         email = request.user.email
         first_name = request.user.first_name if request.user.first_name else email[:5]
         last_name = request.user.last_name if request.user.last_name else email[5:]
@@ -133,7 +133,46 @@ class PaymentView(APIView):
         except Exception:
             raise
 
+        if initiate_payment.get("status") in ("Failed", False, "failed", "FAILED"):
+            return Response(data={
+                "status": False,
+                "message": initiate_payment.get("message")
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+        payment = Payments.objects.create(
+            amount=amount,
+            pmt_ref=pmt_ref,
+            user=request.user,
+            email=email,
+            booking=booking
+        )
         return Response(initiate_payment, status=status.HTTP_200_OK)
+
+class PaymentVerifyView(APIView):
+    http_method_names = ["get"] 
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request, tx_ref=None):
+        payment_obj = get_payment_by_tx_ref(tx_ref=tx_ref, user=request.user)
+        if payment_obj.get("status") != "success":
+            return Response({"status": False,  "message": "failed to get payment object"}, status=status.HTTP_400_BAD_REQUEST)
+        payment = payment_obj.get("payment", None)
+        payments_verify = payment_verify(payment.pmt_ref.strip())
+        if not payments_verify.get("status") in ("success", True, "SUCCESS"):
+            return Response({ "status": False, "message": "Failed to fetch chapa data"}, status=status.HTTP_502_BAD_GATEWAY)
+        payment_method = payments_verify.get("data")["method"]
+        p_status = payments_verify.get("data")["status"].split("/")
+        amount = f"{payments_verify.get("data")["amount"]:.2f}"
+        if amount != str(payment.booking.product.price_per_night) and amount != str(payment.booking.product.price):
+            return Response({ "status": False, "message": "Amount mismatch"}, status=status.HTTP_400_BAD_REQUEST)
+        if p_status[0] in ("success", "SUCCESS", "Success") and p_status[1] in ("completed", "COMPLETED", "Completed"):
+            payment.pmt_status = Payments.PaymentStatus.COMPLETED
+        else:
+            payment.pmt_status = Payments.PaymentStatus.FAILED
+        payment.pmt_method = payment_method
+        payment.save(update_fields=["pmt_status", "pmt_method"])
+        return Response({"status": True, "message": "Payment verified successfully", "payment_status": payment.pmt_status
+        }, status=status.HTTP_200_OK)
 
 
 

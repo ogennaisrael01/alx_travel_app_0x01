@@ -1,20 +1,13 @@
-import httpx
+import requests
 
-def test_regiser(register):
-    url = "http://127.0.0.1:8000/api/v1/bookings/"
+def test_regiser():
+    url = "https://api.chapa.co/v1/transaction/verify/chewatatest-6669"
+    payload = ''
     headers = {
-        "Authorization": "",
-        "Content-Type": "application/json"
-    }
-    payload = {
-        "username": "ogenna",
-        "password": "0987poiu"
-    }
-    request = httpx.post(url, headers=headers)
-
-    if request:
-        return request.headers
-    return False
-
+      'Authorization': 'Bearer CHASECK_TEST-n7TrtZf87rpef5AtLKIaWPALjHUJq9uP'
+  }
+    response = requests.get(url, headers=headers, data=payload)
+    data = response.text
+    print(data)
 if __name__ == "__main__":
-    print(test_regiser("login"))
+    test_regiser()
